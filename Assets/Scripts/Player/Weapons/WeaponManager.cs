@@ -57,6 +57,7 @@ public class WeaponManager : MonoBehaviour
         events.OnCycledWeapon += HandleWeaponCycle;
     }
     //
+    // Handle red dot sight to follow mouse and turn off when the player can't shoot or has died
     void LateUpdate()
     {
         if (playerDied)
@@ -83,6 +84,8 @@ public class WeaponManager : MonoBehaviour
         //
         SetMousePosition();
         PlaySFX(weaponSFX[currentWeapon]);
+        //
+        // Cached ray results to improve performance as no bullets pierce so there is no need to check for multiple hits
         int results = Physics2D.RaycastNonAlloc(form.position, direction, hitObject, weapons[currentWeapon].range);
         //
         uiManager.UpdateBulletDisplay(playerNumber);
@@ -99,6 +102,7 @@ public class WeaponManager : MonoBehaviour
         mouseInput.y = Input.mousePosition.y;
         mouseInput.z = mainCam.nearClipPlane;
         //
+        // mouseWorldCoordinates set to 0 as we are in 2D
         mouseWorldCoordinates = mainCam.ScreenToWorldPoint(mouseInput);
         mouseWorldCoordinates.z = 0;
         //
@@ -109,6 +113,7 @@ public class WeaponManager : MonoBehaviour
     IEnumerator HandleHitResults(int results)
     {
         shotTrail.SetPosition(0, form.position);
+        // As owner will always appear in result, there needs to be at least 2 to have hit something
         if (results < 2)
         {
             poolManager.ReuseObject(poolManager.bulletID, bulletEndPosition);
@@ -118,6 +123,7 @@ public class WeaponManager : MonoBehaviour
         {
             bool alive = false;
             RaycastHit2D hit = hitObject[1];
+            // check if hit player is alive. If no player is hit, treat platforms as being alive
             if (hit.transform.gameObject.layer == 6)
             {
                 alive = hit.transform.GetComponent<Health>().TakeDamage(weapons[currentWeapon].damage);
@@ -135,6 +141,8 @@ public class WeaponManager : MonoBehaviour
     //
     bool OutOfBullets() => weapons[currentWeapon].BulletsLeft() == 0;
     bool CanShoot() => canShoot = Time.time - lastTimeShot > weapons[currentWeapon].timeBetweenShots && !reloading;
+    //
+    // For automatic weapons enable the player to hold the shoot button
     void HandleTriggerHeld()
     {
         if (!weapons[currentWeapon].isAutomatic) return;
@@ -151,6 +159,7 @@ public class WeaponManager : MonoBehaviour
         StartCoroutine(uiManager.ReloadBullets(playerNumber, weapons[currentWeapon]));
         StartCoroutine(reloadBar.LerpReloadBarSize(weapons[currentWeapon].reloadTime));
     }
+    //
     void HandleWeaponCycle()
     {
         if (reloading) return;
