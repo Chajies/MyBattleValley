@@ -1,6 +1,6 @@
 # My Battle Valley
 
-##Controls:
+Controls:
 
 Left click: Shoot
 
