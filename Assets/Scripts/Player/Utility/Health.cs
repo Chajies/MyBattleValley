@@ -1,9 +1,11 @@
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-public class Health : MonoBehaviour
+public class Health : NetworkBehaviour
 {
     readonly int deathEffect = Animator.StringToHash("DeathEffect");
+    const string uiTag = "UI";
     const int maxHealth = 100;
     int currentHealth;
     bool isDead;
@@ -12,13 +14,19 @@ public class Health : MonoBehaviour
     [SerializeField] Transform[] respawnLocations;
     [SerializeField] SpriteRenderer rend;
     [SerializeField] Animator anim;
-    [SerializeField] UIManager ui;
     public int playerNumber;
     PlayerManager manager;
+    UIManager ui;
 
     //
 
     void Awake() => manager = GetComponent<PlayerManager>();
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        ui = GameObject.FindGameObjectWithTag(uiTag).GetComponent<UIManager>();
+    }
+    //
     void Start() => currentHealth = maxHealth;
     public bool TakeDamage(int damage)
     {

@@ -14,7 +14,7 @@ public class PlayerInput
     public void Tick(bool isDead)
     {
         if (Input.GetKeyDown(KeyCode.P)) SceneManager.LoadScene(0);
-        if (isDead) return;
+        if (isDead || !Application.isFocused) return;
         direction = 0;
         //
         if (Input.GetKeyDown(KeyCode.A)) events.DirectionChanged(movedLeft);

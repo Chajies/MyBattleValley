@@ -1,15 +1,19 @@
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-public class WeaponManager : MonoBehaviour
+public class WeaponManager : NetworkBehaviour
 {
+    const string poolTag = "Pool";
+    const string uiTag = "UI";
+    //
     [SerializeField] AudioClip[] weaponSFX;
     [SerializeField] AudioClip cycleSFX;
     public AudioClip reloadSFX;
     public int playerNumber;
     //
-    [SerializeField] ObjectPoolManager poolManager;
-    [SerializeField] UIManager uiManager;
+    ObjectPoolManager poolManager;
+    UIManager uiManager;
     //
     [SerializeField] LineRenderer shotTrail;
     [SerializeField] LineRenderer redDot;
@@ -44,6 +48,13 @@ public class WeaponManager : MonoBehaviour
         source = GetComponent<AudioSource>();
         mainCam = Camera.main;
         form = transform;
+    }
+    //
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        poolManager = GameObject.FindGameObjectWithTag(poolTag).GetComponent<ObjectPoolManager>();
+        uiManager = GameObject.FindGameObjectWithTag(uiTag).GetComponent<UIManager>();
         Initialize();
     }
     //

@@ -1,7 +1,8 @@
+using Unity.Netcode;
 using UnityEngine;
 using System;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : NetworkBehaviour
 {
     [HideInInspector] public Events events;
     [HideInInspector] public bool isDead;
@@ -17,6 +18,8 @@ public class PlayerManager : MonoBehaviour
     void Awake() => Initialize();
     void Update()
     {
+        if (!IsOwner) return;
+        //
         input.Tick(isDead);
         collisions.CheckForGround();
         actions.CalculateVerticalMovement();

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-public class ObjectPoolManager : MonoBehaviour
+public class ObjectPoolManager : NetworkBehaviour
 {
     const int bulletPoolSize = 50;
     public GameObject bulletImpact;
@@ -13,7 +14,13 @@ public class ObjectPoolManager : MonoBehaviour
 
     //
 
-    void Awake() => Initialize();
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        Initialize();
+    }
+    //
+    void Initialize() => bulletID = CreatePool(bulletImpact, bulletPoolSize);
     int CreatePool(GameObject prefab, int poolSize)
     {
         int poolKey = prefab.GetInstanceID();
@@ -40,10 +47,8 @@ public class ObjectPoolManager : MonoBehaviour
     public void RemovePool(int index) => poolDictionary.Remove(index);
     public void ReuseObject(int key, Vector3 position)
     {
-	ObjectInstance objectToReuse = poolDictionary[key].Dequeue();
-	poolDictionary[key].Enqueue(objectToReuse);
-	objectToReuse.Reuse(position);
+    	ObjectInstance objectToReuse = poolDictionary[key].Dequeue();
+    	poolDictionary[key].Enqueue(objectToReuse);
+    	objectToReuse.Reuse(position);
     }
-    //
-    void Initialize() => bulletID = CreatePool(bulletImpact, bulletPoolSize);
 }

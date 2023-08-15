@@ -1,7 +1,8 @@
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-public class Actions : MonoBehaviour
+public class Actions : NetworkBehaviour
 {
     const int jumpApexThreshold = 5;
     const float jumpBuffer = 0.1f;
@@ -21,12 +22,13 @@ public class Actions : MonoBehaviour
     Events events;
 
 
-    //
+
     void Awake()
     {
         manager = GetComponent<PlayerManager>();
         form = transform;
     }
+    //
     void Start() => manager.events.OnJumped += HandleJump;
     public void CalculateVerticalMovement()
     {
