@@ -1,7 +1,9 @@
 using UnityEngine;
 
+// custom ground collision checking
 public class Collisions : MonoBehaviour
 {
+    // used three raycasts to balance performance and accuracy
     [SerializeField] Transform groundCheckerMiddle;
     [SerializeField] Transform groundCheckerRight;
     [SerializeField] Transform groundCheckerLeft;
@@ -10,6 +12,7 @@ public class Collisions : MonoBehaviour
     RaycastHit2D hitRight;
     RaycastHit2D hitLeft;
     //
+    const float minDistance = 0.3f;
     const float rayBuffer = 0.15f;
     const int maxHealth = 100;
     PlayerManager manager;
@@ -38,7 +41,8 @@ public class Collisions : MonoBehaviour
         hitRight = Physics2D.Raycast(groundCheckerRight.position, Vector2.down, rayBuffer, groundLayer);
         hitLeft = Physics2D.Raycast(groundCheckerLeft.position, Vector2.down, rayBuffer, groundLayer);
         //
-        if (hitRight.collider && hitRight.distance < 0.03f)
+        // if any collider hits the ground we flag that collider as being landed
+        if (hitRight.collider && hitRight.distance < minDistance)
         {
             if (airTimer == 0) manager.events.Landed();
             landedRight = true;
@@ -47,7 +51,7 @@ public class Collisions : MonoBehaviour
         }
         else landedRight = false;
         //
-        if (hitLeft.collider && hitLeft.distance < 0.03f)
+        if (hitLeft.collider && hitLeft.distance < minDistance)
         {
             if (airTimer == 0) manager.events.Landed();
             landedLeft = true;
@@ -56,7 +60,7 @@ public class Collisions : MonoBehaviour
         }
         else landedLeft = false;
         //
-        if (hitMiddle.collider && hitMiddle.distance < 0.03f)
+        if (hitMiddle.collider && hitMiddle.distance < minDistance)
         {
             if (airTimer == 0) manager.events.Landed();
             landedMiddle = true;
@@ -64,6 +68,8 @@ public class Collisions : MonoBehaviour
             airTimer = 0;
         }
         else landedRight = false;
+        //
+        // if the middle collider and at least one side collider hits the ground, we are grounded 
         if (landedMiddle && (landedLeft || landedRight)) manager.inAir = false;
         else manager.inAir = true;
     }
