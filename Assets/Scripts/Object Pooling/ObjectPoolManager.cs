@@ -14,7 +14,7 @@ public class ObjectPoolManager : MonoBehaviour
     //
 
     void Awake() => Initialize();
-	int CreatePool(GameObject prefab, int poolSize)
+    int CreatePool(GameObject prefab, int poolSize)
     {
         int poolKey = prefab.GetInstanceID();
         //
@@ -38,15 +38,12 @@ public class ObjectPoolManager : MonoBehaviour
     //
     bool DictionaryHasKey(int key) => poolDictionary.ContainsKey(key);
     public void RemovePool(int index) => poolDictionary.Remove(index);
-	public void ReuseObject(int key, Vector3 position)
+    public void ReuseObject(int key, Vector3 position)
     {
-		ObjectInstance objectToReuse = poolDictionary[key].Dequeue();
-		poolDictionary[key].Enqueue(objectToReuse);
-		objectToReuse.Reuse(position);
-	}
-    //
-    void Initialize()
-    {
-        bulletID = CreatePool(bulletImpact, bulletPoolSize);
+	ObjectInstance objectToReuse = poolDictionary[key].Dequeue();
+	poolDictionary[key].Enqueue(objectToReuse);
+	objectToReuse.Reuse(position);
     }
+    //
+    void Initialize() => bulletID = CreatePool(bulletImpact, bulletPoolSize);
 }
