@@ -30,12 +30,14 @@ public class Actions : MonoBehaviour
     void Start() => manager.events.OnJumped += HandleJump;
     public void CalculateVerticalMovement()
     {
+        // if the player is on the floor the jump apex is always 0
         if (!manager.inAir) apexPoint = 0;
         else
         {
             yVelocity = (form.position.y - previousYPosition) / Time.deltaTime;
             previousYPosition = form.position.y;
             //
+            // the jump apex becomes 1 at the apex
             apexPoint = Mathf.InverseLerp(jumpApexThreshold, 0, Mathf.Abs(yVelocity));
             fallSpeed = Mathf.Lerp(minFallSpeed, maxFallSpeed, apexPoint);
         }
@@ -45,6 +47,7 @@ public class Actions : MonoBehaviour
     //
     void CalculateGravity()
     {
+        // if we are through the ground, move player back to be in line with the ground
         if (!manager.inAir || manager.isDead) verticalSpeed = verticalSpeed < 0 ? 0 : verticalSpeed;
         else verticalSpeed -= fallSpeed * Time.deltaTime;
         if (jumped && !manager.inAir) Jump();
