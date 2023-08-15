@@ -1,5 +1,6 @@
 using System;
 
+// A custom event architecture to enable scripts to interact one another
 public class Events
 {
     public event Action OnShot = delegate{};
