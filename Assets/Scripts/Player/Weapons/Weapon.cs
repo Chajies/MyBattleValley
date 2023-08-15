@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Weapon
 {
+    // cached WaitForSeconds to improve performance
     protected WaitForSeconds timeToReload;
     protected WeaponManager manager;
     protected int bulletsLeft;
