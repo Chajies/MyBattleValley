@@ -24,10 +24,11 @@ public class Movement : MonoBehaviour
         {
             horizontalSpeed += xDirection * acceleration * Time.deltaTime;
             horizontalSpeed = Mathf.Clamp(horizontalSpeed, -maxSpeed, maxSpeed);
-
+            //
             float apexBonus = Mathf.Sign(xDirection) * manager.GetApexPoint();
             horizontalSpeed += apexBonus * Time.deltaTime;
         }
+        // if stopped moving slow the player down to 0
         else horizontalSpeed = Mathf.MoveTowards(horizontalSpeed, 0, deceleration * Time.deltaTime);
         //
         MoveCharacter();
@@ -35,6 +36,7 @@ public class Movement : MonoBehaviour
     //
     void MoveCharacter()
     {
+        // take the players vertical speed into consideration
         positionToMoveTo.x = horizontalSpeed;
         positionToMoveTo.y = manager.VerticalSpeed();
         form.position += positionToMoveTo * Time.deltaTime;
