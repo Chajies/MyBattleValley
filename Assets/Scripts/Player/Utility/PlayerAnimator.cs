@@ -33,7 +33,7 @@ public class PlayerAnimator : MonoBehaviour
         if (direction == 1) form.rotation = Quaternion.Euler(0, 0, tiltAmount);
         else form.rotation = Quaternion.Euler(0, 180, tiltAmount);
     }
-    //
+    // if player stops moving stop player tilt
     void ResetTilt() => form.rotation = Quaternion.Euler(0, form.rotation.y > 0 ? 180 : 0, 0);
     void HandleLanded() => anim.SetTrigger(groundedTrigger);
     void HandleJump()
