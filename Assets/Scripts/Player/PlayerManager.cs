@@ -40,7 +40,8 @@ public class PlayerManager : NetworkBehaviour
     }
     //
     public float VerticalSpeed() => actions.VerticalSpeed();
-    public float GetApexPoint() => actions.apexPoint;
+    public int PlayerNumber() => weapon.GetPlayerNumber();
+    public float GetApexPoint() => actions.ApexPoint();
     public void HandleJump()
     {
         collisions.HandleJump();

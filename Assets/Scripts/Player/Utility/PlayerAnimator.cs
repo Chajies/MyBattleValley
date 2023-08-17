@@ -1,6 +1,7 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerAnimator : MonoBehaviour
+public class PlayerAnimator : NetworkBehaviour
 {
     readonly int groundedTrigger = Animator.StringToHash("Grounded");
     readonly int idleTrigger = Animator.StringToHash("IdleSpeed");

@@ -1,9 +1,10 @@
 using System.Collections;
 using UnityEngine.UI;
+using Unity.Netcode;
 using UnityEngine;
 using TMPro;
 
-public class UIManager : MonoBehaviour
+public class UIManager : NetworkBehaviour
 {
     const int maxHealth = 100;
     //
@@ -28,22 +29,22 @@ public class UIManager : MonoBehaviour
         scoreText[0].text = scoreText[1].text = score[0].ToString();
     }
     //
-    public void SetBulletCount(int playerIndex, Weapon weapon)
+    public void SetBulletCount(int playerIndex, int bullets)
     {
         var array = playerIndex == 0 ? playerOneBullets : playerTwoBullets;
         for (int i = 0; i < array.Length; i++)
         {
-            if (i < weapon.BulletsLeft()) array[i].enabled = true;
+            if (i < bullets) array[i].enabled = true;
             else array[i].enabled = false;
         }
         //
-        bulletsLeft[playerIndex] = weapon.BulletsLeft();
+        bulletsLeft[playerIndex] = bullets;
     }
     //
-    public void SetPlayerWeapon(int playerIndex, Weapon weapon, int weaponIndex)
+    public void SetPlayerWeapon(int playerIndex, int bullets, int weaponIndex)
     {
         playerWeaponIcon[playerIndex].sprite = weaponIcons[weaponIndex];
-        SetBulletCount(playerIndex, weapon);
+        SetBulletCount(playerIndex, bullets);
     }
     //
     public void UpdateBulletDisplay(int playerIndex)

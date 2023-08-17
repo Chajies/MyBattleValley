@@ -11,10 +11,8 @@ public class Health : NetworkBehaviour
     bool isDead;
     //
     WaitForSeconds respawnTime = new WaitForSeconds(3f);
-    [SerializeField] Transform[] respawnLocations;
     [SerializeField] SpriteRenderer rend;
     [SerializeField] Animator anim;
-    public int playerNumber;
     PlayerManager manager;
     UIManager ui;
 
@@ -39,7 +37,7 @@ public class Health : NetworkBehaviour
             return false;
         }
         //
-        ui.UpdateHealthDisplay(playerNumber, currentHealth);
+        ui.UpdateHealthDisplay(manager.PlayerNumber(), currentHealth);
         return true;
     }
     //
@@ -54,8 +52,8 @@ public class Health : NetworkBehaviour
             manager.events.Died();
         }
         //
-        ui.IncreaseScore(playerNumber == 0 ? 1 : 0);
-        ui.UpdateHealthDisplay(playerNumber, currentHealth);
+        ui.IncreaseScore(manager.PlayerNumber() == 0 ? 1 : 0);
+        ui.UpdateHealthDisplay(manager.PlayerNumber(), currentHealth);
     }
     //
     IEnumerator HandlePlayerDied()
@@ -73,7 +71,7 @@ public class Health : NetworkBehaviour
             manager.events.Resurrected();
         }
         //
-        transform.position = respawnLocations[Random.Range(0, respawnLocations.Length)].position;
-        ui.UpdateHealthDisplay(playerNumber, currentHealth);
+        ui.UpdateHealthDisplay(manager.PlayerNumber(), currentHealth);
+        transform.position = Vector3.zero;
     }
 }

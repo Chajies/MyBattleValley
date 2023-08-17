@@ -1,8 +1,9 @@
+using Unity.Netcode;
 using UnityEngine;
 
 public class ObjectInstance
 {
-    GameObject obj;
+    public GameObject obj;
     public Transform form;
     public PoolObject poolObjectScript;
     //

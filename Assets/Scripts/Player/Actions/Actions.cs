@@ -10,10 +10,10 @@ public class Actions : NetworkBehaviour
     const int minFallSpeed = 80;
     const int jumpHeight = 13;
     //
-    [HideInInspector] public float apexPoint;
     float previousYPosition;
     float verticalSpeed;
     float yVelocity;
+    float apexPoint;
     float fallSpeed;
     bool jumped;
     //
@@ -63,6 +63,7 @@ public class Actions : NetworkBehaviour
     }
     //
     void HandleJump() => jumped = true;
+    public float ApexPoint() => apexPoint;
     public float VerticalSpeed() => verticalSpeed;
     void OnDisable() => manager.events.OnJumped -= HandleJump;
 }

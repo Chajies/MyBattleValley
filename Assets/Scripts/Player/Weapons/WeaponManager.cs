@@ -7,13 +7,10 @@ public class WeaponManager : NetworkBehaviour
     const string poolTag = "Pool";
     const string uiTag = "UI";
     //
+    [SerializeField] GameObject impactEffect;
     [SerializeField] AudioClip[] weaponSFX;
     [SerializeField] AudioClip cycleSFX;
     public AudioClip reloadSFX;
-    public int playerNumber;
-    //
-    ObjectPoolManager poolManager;
-    UIManager uiManager;
     //
     [SerializeField] LineRenderer shotTrail;
     [SerializeField] LineRenderer redDot;
@@ -26,9 +23,11 @@ public class WeaponManager : NetworkBehaviour
     float timeShot;
     bool canShoot;
     //
+    NetworkVariable<int> playerNumber = new NetworkVariable<int>();
     WaitForSeconds shotTrailTimer = new WaitForSeconds(0.05f);
     RaycastHit2D[] hitObject = new RaycastHit2D[2];
     ReloadBar reloadBar;
+    UIManager uiManager;
     AudioSource source;
     Weapon[] weapons;
     Transform form;
@@ -44,6 +43,7 @@ public class WeaponManager : NetworkBehaviour
 
     void Awake()
     {
+        playerNumber.OnValueChanged += OnPlayerNumberChanged;
         reloadBar = GetComponentInChildren<ReloadBar>();
         source = GetComponent<AudioSource>();
         mainCam = Camera.main;
@@ -53,7 +53,6 @@ public class WeaponManager : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        poolManager = GameObject.FindGameObjectWithTag(poolTag).GetComponent<ObjectPoolManager>();
         uiManager = GameObject.FindGameObjectWithTag(uiTag).GetComponent<UIManager>();
         Initialize();
     }
@@ -71,6 +70,7 @@ public class WeaponManager : NetworkBehaviour
     // Handle red dot sight to follow mouse and turn off when the player can't shoot or has died
     void LateUpdate()
     {
+        if (!IsOwner || !Application.isFocused) return;
         if (playerDied)
         {
             redDot.enabled = false;
@@ -96,10 +96,9 @@ public class WeaponManager : NetworkBehaviour
         SetMousePosition();
         PlaySFX(weaponSFX[currentWeapon]);
         //
-        // Cached ray results to improve performance as no bullets pierce so there is no need to check for multiple hits
+        // Cached ray results to improve performance. As no bullets pierce there is no need to check for multiple hits
         int results = Physics2D.RaycastNonAlloc(form.position, direction, hitObject, weapons[currentWeapon].range);
-        //
-        uiManager.UpdateBulletDisplay(playerNumber);
+        uiManager.UpdateBulletDisplay(playerNumber.Value);
         StartCoroutine(HandleHitResults(results));
         weapons[currentWeapon].UseBullet();
         //
@@ -127,8 +126,12 @@ public class WeaponManager : NetworkBehaviour
         // As owner will always appear in result, there needs to be at least 2 to have hit something
         if (results < 2)
         {
-            poolManager.ReuseObject(poolManager.bulletID, bulletEndPosition);
             shotTrail.SetPosition(1, bulletEndPosition);
+            //
+            // Request hit to execute on all clients
+            RequestHitServerRpc(bulletEndPosition);
+            // Hit locally immediately
+            SpawnHitEffect(bulletEndPosition);
         }
         else
         {
@@ -141,8 +144,9 @@ public class WeaponManager : NetworkBehaviour
             }
             else alive = true;
             //
-            poolManager.ReuseObject(poolManager.bulletID, alive ? hit.point : bulletEndPosition);
             shotTrail.SetPosition(1, alive ? hit.point : bulletEndPosition);
+            RequestHitServerRpc(alive ? hit.point : bulletEndPosition);
+            SpawnHitEffect(alive ? hit.point : bulletEndPosition);
         }
         //
         shotTrail.enabled = true;
@@ -150,8 +154,17 @@ public class WeaponManager : NetworkBehaviour
         shotTrail.enabled = false;
     }
     //
-    bool OutOfBullets() => weapons[currentWeapon].BulletsLeft() == 0;
+    [ServerRpc]
+    void RequestHitServerRpc(Vector3 position) => SpawnHitClientRpc(position);
+    [ClientRpc]
+    void SpawnHitClientRpc(Vector3 position)
+    {
+        if (!IsOwner) SpawnHitEffect(position);
+    }
+    //
+    void SpawnHitEffect(Vector3 position)  => Instantiate(impactEffect, position, Quaternion.identity);
     bool CanShoot() => canShoot = Time.time - lastTimeShot > weapons[currentWeapon].timeBetweenShots && !reloading;
+    bool OutOfBullets() => weapons[currentWeapon].BulletsLeft() == 0;
     //
     // For automatic weapons enable the player to hold the shoot button
     void HandleTriggerHeld()
@@ -167,8 +180,8 @@ public class WeaponManager : NetworkBehaviour
         //
         PlaySFX(reloadSFX);
         StartCoroutine(weapons[currentWeapon].Reload());
-        StartCoroutine(uiManager.ReloadBullets(playerNumber, weapons[currentWeapon]));
         StartCoroutine(reloadBar.LerpReloadBarSize(weapons[currentWeapon].reloadTime));
+        StartCoroutine(uiManager.ReloadBullets(playerNumber.Value, weapons[currentWeapon]));
     }
     //
     void HandleWeaponCycle()
@@ -177,7 +190,7 @@ public class WeaponManager : NetworkBehaviour
         //
         currentWeapon++;
         currentWeapon = currentWeapon % maxWeapons;
-        uiManager.SetPlayerWeapon(playerNumber, weapons[currentWeapon], currentWeapon);
+        uiManager.SetPlayerWeapon(playerNumber.Value, weapons[currentWeapon].BulletsLeft(), currentWeapon);
         //
         PlaySFX(cycleSFX);
     }
@@ -190,18 +203,24 @@ public class WeaponManager : NetworkBehaviour
     //
     void Initialize()
     {
-        weapons = new Weapon[maxWeapons];
+        if (IsOwner) CommitPlayerNumberToNetworkServerRpc((int)OwnerClientId);
+        else playerNumber.Value = (int)OwnerClientId;
         //
+        weapons = new Weapon[maxWeapons];
         weapons[0] = new HandGun(this);
         weapons[1] = new LongGun(this);
         weapons[2] = new MachineGun(this);
         //
-        uiManager.SetPlayerWeapon(playerNumber, weapons[0], 0);
+        uiManager.SetPlayerWeapon(playerNumber.Value, weapons[0].BulletsLeft(), 0);
     }
     //
-    void HandleDeath() => playerDied = true;
+    [ServerRpc]
+    void CommitPlayerNumberToNetworkServerRpc(int id) => playerNumber.Value = (int)OwnerClientId;
+    void OnPlayerNumberChanged(int prevId, int newId) => playerNumber.Value = newId;
+    public int GetPlayerNumber() => playerNumber.Value;
     void HandleResurrection() => playerDied = false;
-    void OnDisable()
+    void HandleDeath() => playerDied = true;
+    public override void OnNetworkDespawn()
     {
         events.OnShot -= Shoot;
         events.OnDied -= HandleDeath;
@@ -209,5 +228,6 @@ public class WeaponManager : NetworkBehaviour
         events.OnHeldTrigger -= HandleTriggerHeld;
         events.OnCycledWeapon -= HandleWeaponCycle;
         events.OnResurrected -= HandleResurrection;
+        playerNumber.OnValueChanged -= OnPlayerNumberChanged;
     }
 }
