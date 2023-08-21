@@ -19,8 +19,6 @@ public class SpriteSetter : NetworkBehaviour
         if (IsOwner) CommitSpriteToNetworkServerRpc((int)OwnerClientId);
         else rend.sprite = playerSprite[(int)OwnerClientId % playerSprite.Length];
     }
-
-
     //
     public override void OnNetworkDespawn()
     {

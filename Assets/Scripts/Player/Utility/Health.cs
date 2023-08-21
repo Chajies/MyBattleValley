@@ -37,7 +37,7 @@ public class Health : NetworkBehaviour
             return false;
         }
         //
-        ui.UpdateHealthDisplay(manager.PlayerNumber(), currentHealth);
+        ui.UpdateHealthDisplayServerRpc(manager.PlayerNumber(), currentHealth);
         return true;
     }
     //
@@ -52,8 +52,8 @@ public class Health : NetworkBehaviour
             manager.events.Died();
         }
         //
-        ui.IncreaseScore(manager.PlayerNumber() == 0 ? 1 : 0);
-        ui.UpdateHealthDisplay(manager.PlayerNumber(), currentHealth);
+        ui.IncreaseScoreServerRpc(manager.PlayerNumber() == 0 ? 1 : 0);
+        ui.UpdateHealthDisplayServerRpc(manager.PlayerNumber(), currentHealth);
     }
     //
     IEnumerator HandlePlayerDied()
@@ -71,7 +71,7 @@ public class Health : NetworkBehaviour
             manager.events.Resurrected();
         }
         //
-        ui.UpdateHealthDisplay(manager.PlayerNumber(), currentHealth);
+        ui.UpdateHealthDisplayServerRpc(manager.PlayerNumber(), currentHealth);
         transform.position = Vector3.zero;
     }
 }

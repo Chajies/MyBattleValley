@@ -95,10 +95,10 @@ public class WeaponManager : NetworkBehaviour
         //
         SetMousePosition();
         PlaySFX(weaponSFX[currentWeapon]);
+        uiManager.RequestUpdateBulletDisplayServerRpc(playerNumber.Value);
         //
         // Cached ray results to improve performance. As no bullets pierce there is no need to check for multiple hits
         int results = Physics2D.RaycastNonAlloc(form.position, direction, hitObject, weapons[currentWeapon].range);
-        uiManager.UpdateBulletDisplay(playerNumber.Value);
         StartCoroutine(HandleHitResults(results));
         weapons[currentWeapon].UseBullet();
         //
@@ -123,7 +123,7 @@ public class WeaponManager : NetworkBehaviour
     IEnumerator HandleHitResults(int results)
     {
         shotTrail.SetPosition(0, form.position);
-        // As owner will always appear in result, there needs to be at least 2 to have hit something
+        // As the shooter will always appear in result, there needs to be at least 2 to have hit something
         if (results < 2)
         {
             shotTrail.SetPosition(1, bulletEndPosition);
@@ -144,9 +144,10 @@ public class WeaponManager : NetworkBehaviour
             }
             else alive = true;
             //
-            shotTrail.SetPosition(1, alive ? hit.point : bulletEndPosition);
-            RequestHitServerRpc(alive ? hit.point : bulletEndPosition);
-            SpawnHitEffect(alive ? hit.point : bulletEndPosition);
+            Vector3 hitPosition = alive ? hit.point : bulletEndPosition;
+            shotTrail.SetPosition(1, hitPosition);
+            RequestHitServerRpc(hitPosition);
+            SpawnHitEffect(hitPosition);
         }
         //
         shotTrail.enabled = true;
@@ -181,7 +182,7 @@ public class WeaponManager : NetworkBehaviour
         PlaySFX(reloadSFX);
         StartCoroutine(weapons[currentWeapon].Reload());
         StartCoroutine(reloadBar.LerpReloadBarSize(weapons[currentWeapon].reloadTime));
-        StartCoroutine(uiManager.ReloadBullets(playerNumber.Value, weapons[currentWeapon]));
+        uiManager.ReloadBulletsServerRpc(playerNumber.Value, weapons[currentWeapon].reloadTime, weapons[currentWeapon].magazineSize);
     }
     //
     void HandleWeaponCycle()
@@ -190,7 +191,7 @@ public class WeaponManager : NetworkBehaviour
         //
         currentWeapon++;
         currentWeapon = currentWeapon % maxWeapons;
-        uiManager.SetPlayerWeapon(playerNumber.Value, weapons[currentWeapon].BulletsLeft(), currentWeapon);
+        uiManager.SetPlayerWeaponServerRpc(playerNumber.Value, weapons[currentWeapon].BulletsLeft(), currentWeapon);
         //
         PlaySFX(cycleSFX);
     }
@@ -211,7 +212,7 @@ public class WeaponManager : NetworkBehaviour
         weapons[1] = new LongGun(this);
         weapons[2] = new MachineGun(this);
         //
-        uiManager.SetPlayerWeapon(playerNumber.Value, weapons[0].BulletsLeft(), 0);
+        uiManager.SetPlayerWeaponServerRpc(playerNumber.Value, weapons[0].BulletsLeft(), 0);
     }
     //
     [ServerRpc]
